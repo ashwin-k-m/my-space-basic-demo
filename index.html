@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MySpace Demo</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the modal */
+        .myspace-modal {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 300px;
+            max-width: 90%;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .myspace-modal.open {
+            display: block;
+        }
+
+        .gradient-button:hover {
+            background: linear-gradient(to right, #feffc5, #ffd000);
+            /* Hover gradient (yellow) */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <!-- MySpace Icon -->
+    <button
+        class="gradient-button fixed bottom-5 right-5 bg-gradient-to-r from-yellow-500 to-yellow-100 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors"
+        onclick="toggleMySpace()">
+        <span>📝</span>
+    </button>
+
+    <!-- MySpace Modal -->
+    <div class="myspace-modal p-4" id="myspaceModal">
+        <h2 class="text-xl font-bold mb-4">MySpace</h2>
+
+        <!-- Search Bar -->
+        <input type="text" id="searchBar"
+            class="w-48 p-2 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Search..." oninput="filterItems()" />
+        <button onclick="filterItems()"
+            class="w-22 p-2 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 transition-colors">
+            Search
+        </button>
+        <hr class="my-4" />
+
+        <!-- Add New Section -->
+        <h3 class="text-lg font-semibold mb-2">Add New</h3>
+        <input type="text" id="urlInput"
+            class="w-full p-2 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter URL" />
+        <textarea id="noteInput"
+            class="w-full p-2 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Add a note..."></textarea>
+        <button onclick="saveItem()"
+            class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors">
+            Save
+        </button>
+
+        <!-- Collection Section -->
+        <div class="mt-6">
+            <h3 class="text-lg font-semibold mb-2">Collection</h3>
+            <div style="overflow-y: scroll;">
+                <div id="collectionContent" class="space-y-2 h-40">
+                    <!-- Collection items will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load saved items from localStorage
+        let savedItems = JSON.parse(localStorage.getItem('myspaceItems')) || [];
+
+        // Toggle MySpace modal
+        function toggleMySpace() {
+            const modal = document.getElementById('myspaceModal');
+            modal.classList.toggle('open');
+            renderItems();
+        }
+
+        // Save new item
+        function saveItem() {
+            const url = document.getElementById('urlInput').value;
+            const note = document.getElementById('noteInput').value;
+
+            if (url || note) {
+                savedItems.push({ url, note });
+                localStorage.setItem('myspaceItems', JSON.stringify(savedItems));
+                renderItems();
+                document.getElementById('urlInput').value = '';
+                document.getElementById('noteInput').value = '';
+                alert('Saved!');
+            } else {
+                alert('Please enter a URL or note.');
+            }
+        }
+
+        // Render saved items
+        function renderItems() {
+            const collectionDiv = document.getElementById('collectionContent');
+            collectionDiv.innerHTML = '';
+
+            savedItems.forEach((item, index) => {
+                const itemHtml = `
+          <div class="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+            <strong class="block text-sm font-medium text-gray-700">URL:</strong>
+            <a href="${item.url}" target="_blank" class="text-blue-500 hover:underline">${item.url}</a><br>
+            <strong class="block text-sm font-medium text-gray-700 mt-2">Note:</strong>
+            <p class="text-gray-600">${item.note}</p>
+            <button
+              onclick="deleteItem(${index})"
+              class="mt-2 text-sm text-red-500 hover:text-red-700"
+            >
+              Delete
+            </button>
+          </div>
+        `;
+                if (item.note) {
+                    collectionDiv.innerHTML += itemHtml;
+                }
+            });
+        }
+
+        // Delete an item
+        function deleteItem(index) {
+            savedItems.splice(index, 1);
+            localStorage.setItem('myspaceItems', JSON.stringify(savedItems));
+            renderItems();
+        }
+
+        // Filter items based on search
+        function filterItems() {
+            const searchText = document.getElementById('searchBar').value.toLowerCase();
+            const collectionDiv = document.getElementById('collectionContent');
+            collectionDiv.innerHTML = '';
+
+            savedItems.forEach((item, index) => {
+                if (
+                    item.url.toLowerCase().includes(searchText) ||
+                    item.note.toLowerCase().includes(searchText)
+                ) {
+                    const itemHtml = `
+            <div class="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+              <strong class="block text-sm font-medium text-gray-700">URL:</strong>
+              <a href="${item.url}" target="_blank" class="text-blue-500 hover:underline">${item.url}</a><br>
+              <strong class="block text-sm font-medium text-gray-700 mt-2">Note:</strong>
+              <p class="text-gray-600">${item.note}</p>
+              <button
+                onclick="deleteItem(${index})"
+                class="mt-2 text-sm text-red-500 hover:text-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          `;
+                    if (item.note) {
+                        collectionDiv.innerHTML += itemHtml;
+                    }
+                }
+            });
+        }
+
+        // Initial render
+        renderItems();
+    </script>
+</body>
+
+</html>
